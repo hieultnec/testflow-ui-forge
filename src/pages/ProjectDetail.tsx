@@ -13,6 +13,7 @@ import TestDataTab from '@/components/project-detail/TestDataTab';
 import RunHistoryTab from '@/components/project-detail/RunHistoryTab';
 import PromptModal from '@/components/project-detail/PromptModal';
 import DocumentUploadModal from '@/components/project-detail/DocumentUploadModal';
+import ScenarioFormModal from '@/components/project-detail/ScenarioFormModal';
 
 interface Document {
   id: string;
@@ -28,6 +29,7 @@ const ProjectDetail = () => {
   const { id } = useParams();
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   const [isDocumentUploadOpen, setIsDocumentUploadOpen] = useState(false);
+  const [isScenarioFormOpen, setIsScenarioFormOpen] = useState(false);
   const [promptType, setPromptType] = useState<'scenarios' | 'cases' | 'data'>('scenarios');
 
   const mockProject = {
@@ -76,32 +78,32 @@ const ProjectDetail = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-4 py-6">
         {/* Header */}
-        <div className="mb-8">
-          <Link to="/" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
-            <ArrowLeft className="w-5 h-5 mr-2" />
+        <div className="mb-6">
+          <Link to="/" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-3">
+            <ArrowLeft className="w-4 h-4 mr-1" />
             Back to Projects
           </Link>
           
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{mockProject.name}</h1>
-              <p className="text-gray-600 mb-2">{mockProject.description}</p>
-              <div className="flex items-center gap-4 text-sm text-gray-500">
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">{mockProject.name}</h1>
+              <p className="text-gray-600 mb-1 text-sm">{mockProject.description}</p>
+              <div className="flex items-center gap-3 text-xs text-gray-500">
                 <span>Version: {mockProject.version}</span>
                 <span>Owner: {mockProject.owner}</span>
                 <span>Updated: {mockProject.lastUpdated}</span>
               </div>
             </div>
             
-            <div className="flex gap-3">
-              <Button variant="outline" className="px-4 py-2">
-                <Settings className="w-4 h-4 mr-2" />
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="px-3 py-1">
+                <Settings className="w-4 h-4 mr-1" />
                 Settings
               </Button>
-              <Button variant="outline" className="px-4 py-2">
-                <Download className="w-4 h-4 mr-2" />
+              <Button variant="outline" size="sm" className="px-3 py-1">
+                <Download className="w-4 h-4 mr-1" />
                 Export
               </Button>
             </div>
@@ -110,40 +112,40 @@ const ProjectDetail = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="scenarios">Scenarios</TabsTrigger>
-            <TabsTrigger value="test-cases">Test Cases</TabsTrigger>
-            <TabsTrigger value="test-data">Test Data</TabsTrigger>
-            <TabsTrigger value="run-history">Run History</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5 mb-4">
+            <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
+            <TabsTrigger value="scenarios" className="text-sm">Scenarios</TabsTrigger>
+            <TabsTrigger value="test-cases" className="text-sm">Test Cases</TabsTrigger>
+            <TabsTrigger value="test-data" className="text-sm">Test Data</TabsTrigger>
+            <TabsTrigger value="run-history" className="text-sm">Run History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
-            <div className="space-y-6">
+            <div className="space-y-4">
               <Card>
-                <CardHeader>
-                  <CardTitle>Project Overview</CardTitle>
-                  <CardDescription>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Project Overview</CardTitle>
+                  <CardDescription className="text-sm">
                     Summary of test artifacts and recent activity
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-blue-900">Test Scenarios</h3>
-                      <p className="text-2xl font-bold text-blue-700">12</p>
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div className="bg-blue-50 p-3 rounded-md border border-gray-100">
+                      <h3 className="font-medium text-blue-900 text-sm">Test Scenarios</h3>
+                      <p className="text-xl font-bold text-blue-700">12</p>
                     </div>
-                    <div className="bg-green-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-green-900">Test Cases</h3>
-                      <p className="text-2xl font-bold text-green-700">47</p>
+                    <div className="bg-green-50 p-3 rounded-md border border-gray-100">
+                      <h3 className="font-medium text-green-900 text-sm">Test Cases</h3>
+                      <p className="text-xl font-bold text-green-700">47</p>
                     </div>
-                    <div className="bg-purple-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-purple-900">Test Data Sets</h3>
-                      <p className="text-2xl font-bold text-purple-700">23</p>
+                    <div className="bg-purple-50 p-3 rounded-md border border-gray-100">
+                      <h3 className="font-medium text-purple-900 text-sm">Test Data Sets</h3>
+                      <p className="text-xl font-bold text-purple-700">23</p>
                     </div>
-                    <div className="bg-orange-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-orange-900">Test Runs</h3>
-                      <p className="text-2xl font-bold text-orange-700">8</p>
+                    <div className="bg-orange-50 p-3 rounded-md border border-gray-100">
+                      <h3 className="font-medium text-orange-900 text-sm">Test Runs</h3>
+                      <p className="text-xl font-bold text-orange-700">8</p>
                     </div>
                   </div>
                 </CardContent>
@@ -151,55 +153,61 @@ const ProjectDetail = () => {
 
               {/* Uploaded Documents Section */}
               <Card>
-                <CardHeader>
+                <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileText className="w-5 h-5" />
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <FileText className="w-4 h-4" />
                         📎 Uploaded Documents
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-sm">
                         Version-controlled project documents and test data files
                       </CardDescription>
                     </div>
-                    <Button onClick={() => setIsDocumentUploadOpen(true)}>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload New Version
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => setIsScenarioFormOpen(true)} className="px-3 py-1">
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add Scenario
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setIsDocumentUploadOpen(true)} className="px-3 py-1">
+                        <Upload className="w-4 h-4 mr-1" />
+                        Upload New Version
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="rounded-md border">
+                <CardContent className="pt-0">
+                  <div className="rounded-md border border-gray-200">
                     <Table>
                       <TableHeader>
-                        <TableRow>
-                          <TableHead>Document Name</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Version</TableHead>
-                          <TableHead>Size</TableHead>
-                          <TableHead>Uploaded By</TableHead>
-                          <TableHead>Upload Date</TableHead>
-                          <TableHead>Actions</TableHead>
+                        <TableRow className="border-gray-200">
+                          <TableHead className="py-2 text-xs">Document Name</TableHead>
+                          <TableHead className="py-2 text-xs">Type</TableHead>
+                          <TableHead className="py-2 text-xs">Version</TableHead>
+                          <TableHead className="py-2 text-xs">Size</TableHead>
+                          <TableHead className="py-2 text-xs">Uploaded By</TableHead>
+                          <TableHead className="py-2 text-xs">Upload Date</TableHead>
+                          <TableHead className="py-2 text-xs">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {mockDocuments.map((doc) => (
-                          <TableRow key={doc.id}>
-                            <TableCell className="font-medium">{doc.name}</TableCell>
-                            <TableCell>
-                              <Badge variant="secondary">{doc.type}</Badge>
+                          <TableRow key={doc.id} className="border-gray-100 hover:bg-gray-50">
+                            <TableCell className="font-medium py-2 text-sm">{doc.name}</TableCell>
+                            <TableCell className="py-2">
+                              <Badge variant="secondary" className="text-xs px-2 py-0">{doc.type}</Badge>
                             </TableCell>
-                            <TableCell>{doc.version}</TableCell>
-                            <TableCell>{doc.size}</TableCell>
-                            <TableCell>{doc.uploadedBy}</TableCell>
-                            <TableCell>{doc.uploadDate}</TableCell>
-                            <TableCell>
+                            <TableCell className="py-2 text-sm text-gray-600">{doc.version}</TableCell>
+                            <TableCell className="py-2 text-sm text-gray-600">{doc.size}</TableCell>
+                            <TableCell className="py-2 text-sm text-gray-600">{doc.uploadedBy}</TableCell>
+                            <TableCell className="py-2 text-sm text-gray-600">{doc.uploadDate}</TableCell>
+                            <TableCell className="py-2">
                               <div className="flex gap-1">
-                                <Button variant="ghost" size="sm">
-                                  <Download className="w-4 h-4" />
+                                <Button variant="ghost" size="sm" className="p-1">
+                                  <Download className="w-3 h-3" />
                                 </Button>
-                                <Button variant="ghost" size="sm">
-                                  <FileText className="w-4 h-4" />
+                                <Button variant="ghost" size="sm" className="p-1">
+                                  <FileText className="w-3 h-3" />
                                 </Button>
                               </div>
                             </TableCell>
@@ -239,6 +247,12 @@ const ProjectDetail = () => {
         <DocumentUploadModal
           isOpen={isDocumentUploadOpen}
           onClose={() => setIsDocumentUploadOpen(false)}
+        />
+
+        <ScenarioFormModal
+          isOpen={isScenarioFormOpen}
+          onClose={() => setIsScenarioFormOpen(false)}
+          mode="create"
         />
       </div>
     </div>

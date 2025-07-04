@@ -27,6 +27,8 @@ const ScenarioFormModal: React.FC<ScenarioFormModalProps> = ({
   scenario, 
   mode 
 }) => {
+  const [selectedPriority, setSelectedPriority] = React.useState(scenario?.priority || 'Medium');
+  
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<ScenarioFormData>({
     defaultValues: scenario || { name: '', description: '', priority: 'Medium' }
   });
@@ -36,29 +38,36 @@ const ScenarioFormModal: React.FC<ScenarioFormModalProps> = ({
       setValue('name', scenario.name);
       setValue('description', scenario.description);
       setValue('priority', scenario.priority);
+      setSelectedPriority(scenario.priority);
     }
   }, [scenario, mode, setValue]);
 
   const onSubmit = (data: ScenarioFormData) => {
-    console.log(`${mode} scenario:`, data);
+    const formData = {
+      ...data,
+      priority: selectedPriority as 'High' | 'Medium' | 'Low'
+    };
+    console.log(`${mode} scenario:`, formData);
     // Here you would handle the actual create/update
     reset();
+    setSelectedPriority('Medium');
     onClose();
   };
 
   const handleClose = () => {
     reset();
+    setSelectedPriority('Medium');
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-lg">
             {mode === 'create' ? 'Create New Test Scenario' : 'Edit Test Scenario'}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm">
             {mode === 'create' 
               ? 'Define a new test scenario with name, description, and priority.'
               : 'Update the test scenario details.'
@@ -68,34 +77,36 @@ const ScenarioFormModal: React.FC<ScenarioFormModalProps> = ({
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Scenario Name</Label>
+            <Label htmlFor="name" className="text-sm">Scenario Name</Label>
             <Input
               id="name"
               placeholder="e.g., User Registration Flow"
+              className="text-sm"
               {...register('name', { required: 'Scenario name is required' })}
             />
             {errors.name && (
-              <p className="text-sm text-red-600">{errors.name.message}</p>
+              <p className="text-xs text-red-600">{errors.name.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description" className="text-sm">Description</Label>
             <Textarea
               id="description"
               placeholder="Describe the test scenario in detail..."
               rows={4}
+              className="text-sm resize-none"
               {...register('description', { required: 'Description is required' })}
             />
             {errors.description && (
-              <p className="text-sm text-red-600">{errors.description.message}</p>
+              <p className="text-xs text-red-600">{errors.description.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="priority">Priority</Label>
-            <Select defaultValue="Medium">
-              <SelectTrigger>
+            <Label htmlFor="priority" className="text-sm">Priority</Label>
+            <Select value={selectedPriority} onValueChange={setSelectedPriority}>
+              <SelectTrigger className="text-sm">
                 <SelectValue placeholder="Select priority" />
               </SelectTrigger>
               <SelectContent>
@@ -106,11 +117,11 @@ const ScenarioFormModal: React.FC<ScenarioFormModalProps> = ({
             </Select>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose}>
+          <DialogFooter className="pt-4">
+            <Button type="button" variant="outline" onClick={handleClose} className="px-4 py-2">
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" className="px-4 py-2">
               {mode === 'create' ? 'Create Scenario' : 'Update Scenario'}
             </Button>
           </DialogFooter>

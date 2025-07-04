@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
-import { Plus, Edit3, History, Copy, Database, ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
+import { Plus, Edit3, History, Copy, Database, ChevronDown, ChevronRight, Trash2, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import TestCaseFormModal from './TestCaseFormModal';
 
 interface TestCase {
@@ -104,6 +105,11 @@ const TestCasesTab: React.FC<TestCasesTabProps> = ({ onOpenPromptModal }) => {
     setIsFormModalOpen(true);
   };
 
+  const handleRunTestCase = (testCaseId: string, testCaseName: string) => {
+    console.log(`Running test case: ${testCaseName} (ID: ${testCaseId})`);
+    // Mock test case run - in real implementation, this would trigger test execution
+  };
+
   const handleDuplicateTestCase = (testCase: TestCase) => {
     const duplicated = {
       ...testCase,
@@ -120,36 +126,36 @@ const TestCasesTab: React.FC<TestCasesTabProps> = ({ onOpenPromptModal }) => {
 
   const getTagColor = (tag: string) => {
     const colors: { [key: string]: string } = {
-      'Regression': 'bg-blue-100 text-blue-800',
-      'Smoke': 'bg-green-100 text-green-800',
-      'Critical': 'bg-red-100 text-red-800',
-      'Negative': 'bg-orange-100 text-orange-800',
-      'Validation': 'bg-purple-100 text-purple-800',
-      'Integration': 'bg-indigo-100 text-indigo-800'
+      'Regression': 'bg-blue-50 text-blue-700 border-blue-200',
+      'Smoke': 'bg-green-50 text-green-700 border-green-200',
+      'Critical': 'bg-red-50 text-red-700 border-red-200',
+      'Negative': 'bg-orange-50 text-orange-700 border-orange-200',
+      'Validation': 'bg-purple-50 text-purple-700 border-purple-200',
+      'Integration': 'bg-indigo-50 text-indigo-700 border-indigo-200'
     };
-    return colors[tag] || 'bg-gray-100 text-gray-800';
+    return colors[tag] || 'bg-gray-50 text-gray-700 border-gray-200';
   };
 
   return (
-    <>
+    <TooltipProvider>
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle>Test Cases</CardTitle>
+            <CardTitle className="text-lg">Test Cases</CardTitle>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={onOpenPromptModal}>
-                <Database className="w-4 h-4 mr-2" />
+              <Button variant="outline" size="sm" onClick={onOpenPromptModal} className="px-3 py-1">
+                <Database className="w-4 h-4 mr-1" />
                 Generate Test Data
               </Button>
-              <Button size="sm" onClick={handleCreateTestCase}>
-                <Plus className="w-4 h-4 mr-2" />
+              <Button size="sm" onClick={handleCreateTestCase} className="px-3 py-1">
+                <Plus className="w-4 h-4 mr-1" />
                 Add Test Case
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
+        <CardContent className="pt-0">
+          <div className="space-y-3">
             {testCases.map((testCase) => (
               <Collapsible
                 key={testCase.id}
@@ -157,26 +163,46 @@ const TestCasesTab: React.FC<TestCasesTabProps> = ({ onOpenPromptModal }) => {
                 onOpenChange={() => toggleTestCase(testCase.id)}
               >
                 <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors border border-gray-200">
                     <div className="flex items-center gap-3">
                       {expandedCases.includes(testCase.id) ? (
-                        <ChevronDown className="w-5 h-5 text-gray-600" />
+                        <ChevronDown className="w-4 h-4 text-gray-600" />
                       ) : (
-                        <ChevronRight className="w-5 h-5 text-gray-600" />
+                        <ChevronRight className="w-4 h-4 text-gray-600" />
                       )}
                       <div className="text-left">
-                        <h4 className="font-semibold text-gray-900">{testCase.name}</h4>
-                        <p className="text-sm text-gray-600">Scenario: {testCase.scenarioName}</p>
-                        <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium text-gray-900 text-sm">{testCase.name}</h4>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-1 h-6 w-6"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRunTestCase(testCase.id, testCase.name);
+                                }}
+                              >
+                                <Play className="w-3 h-3" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">Run this test case</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <p className="text-xs text-gray-600 mb-2">Scenario: {testCase.scenarioName}</p>
+                        <div className="flex items-center gap-1 mb-2 flex-wrap">
                           {testCase.tags.map((tag) => (
-                            <Badge key={tag} className={getTagColor(tag)} variant="secondary">
+                            <Badge key={tag} className={`${getTagColor(tag)} text-xs px-2 py-0`} variant="outline">
                               {tag}
                             </Badge>
                           ))}
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2">
                           <span className="text-xs text-gray-500">Version: {testCase.version}</span>
-                          <span className="text-xs text-gray-500">•</span>
+                          <span className="text-xs text-gray-400">•</span>
                           <span className="text-xs text-gray-500">Updated: {testCase.lastUpdated}</span>
                         </div>
                       </div>
@@ -184,13 +210,13 @@ const TestCasesTab: React.FC<TestCasesTabProps> = ({ onOpenPromptModal }) => {
                   </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <div className="mt-2 ml-8 p-4 bg-white border border-gray-200 rounded-lg">
-                    <div className="space-y-4">
+                  <div className="mt-2 ml-6 p-3 bg-white border border-gray-200 rounded-md">
+                    <div className="space-y-3">
                       <div>
-                        <h6 className="font-medium text-gray-900 mb-2">Steps:</h6>
+                        <h6 className="font-medium text-gray-900 mb-2 text-sm">Steps:</h6>
                         <ol className="space-y-1">
                           {testCase.steps.map((step, index) => (
-                            <li key={index} className="flex items-start text-sm text-gray-700">
+                            <li key={index} className="flex items-start text-xs text-gray-700">
                               <span className="mr-2 text-blue-600 font-medium">{index + 1}.</span>
                               {step}
                             </li>
@@ -198,43 +224,43 @@ const TestCasesTab: React.FC<TestCasesTabProps> = ({ onOpenPromptModal }) => {
                         </ol>
                       </div>
                       <div>
-                        <h6 className="font-medium text-gray-900 mb-2">Expected Result:</h6>
-                        <p className="text-sm text-gray-700">{testCase.expectedResult}</p>
+                        <h6 className="font-medium text-gray-900 mb-2 text-sm">Expected Result:</h6>
+                        <p className="text-xs text-gray-700">{testCase.expectedResult}</p>
                       </div>
                       <div className="flex gap-2 pt-2 border-t border-gray-100 flex-wrap">
-                        <Button variant="outline" size="sm" onClick={() => handleEditTestCase(testCase)}>
+                        <Button variant="outline" size="sm" onClick={() => handleEditTestCase(testCase)} className="px-3 py-1">
                           <Edit3 className="w-4 h-4 mr-1" />
                           Edit
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleDuplicateTestCase(testCase)}>
+                        <Button variant="outline" size="sm" onClick={() => handleDuplicateTestCase(testCase)} className="px-3 py-1">
                           <Copy className="w-4 h-4 mr-1" />
                           Duplicate
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" className="px-3 py-1">
                           <History className="w-4 h-4 mr-1" />
                           History
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" className="px-3 py-1">
                           <Database className="w-4 h-4 mr-1" />
                           Generate Data
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                            <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 px-3 py-1">
                               <Trash2 className="w-4 h-4 mr-1" />
                               Delete
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Test Case</AlertDialogTitle>
-                              <AlertDialogDescription>
+                              <AlertDialogTitle className="text-lg">Delete Test Case</AlertDialogTitle>
+                              <AlertDialogDescription className="text-sm">
                                 Are you sure you want to delete "{testCase.name}"? This action cannot be undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteTestCase(testCase.id)} className="bg-red-600 hover:bg-red-700">
+                              <AlertDialogCancel className="px-4 py-2">Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteTestCase(testCase.id)} className="bg-red-600 hover:bg-red-700 px-4 py-2">
                                 Delete Test Case
                               </AlertDialogAction>
                             </AlertDialogFooter>
@@ -256,7 +282,7 @@ const TestCasesTab: React.FC<TestCasesTabProps> = ({ onOpenPromptModal }) => {
         testCase={editingTestCase}
         mode={modalMode}
       />
-    </>
+    </TooltipProvider>
   );
 };
 
