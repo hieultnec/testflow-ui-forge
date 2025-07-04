@@ -4,14 +4,10 @@ import { ArrowLeft, Settings, Download, Plus, Upload, FileText } from 'lucide-re
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import TestScenariosTab from '@/components/project-detail/TestScenariosTab';
-import TestCasesTab from '@/components/project-detail/TestCasesTab';
-import TestDataTab from '@/components/project-detail/TestDataTab';
-import RunHistoryTab from '@/components/project-detail/RunHistoryTab';
-import PromptModal from '@/components/project-detail/PromptModal';
 import DocumentUploadModal from '@/components/project-detail/DocumentUploadModal';
 import ScenarioFormModal from '@/components/project-detail/ScenarioFormModal';
 
@@ -27,10 +23,9 @@ interface Document {
 
 const ProjectDetail = () => {
   const { id } = useParams();
-  const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
+  const navigate = useNavigate();
   const [isDocumentUploadOpen, setIsDocumentUploadOpen] = useState(false);
   const [isScenarioFormOpen, setIsScenarioFormOpen] = useState(false);
-  const [promptType, setPromptType] = useState<'scenarios' | 'cases' | 'data'>('scenarios');
 
   const mockProject = {
     id: id || '1',
@@ -71,9 +66,8 @@ const ProjectDetail = () => {
     }
   ];
 
-  const openPromptModal = (type: 'scenarios' | 'cases' | 'data') => {
-    setPromptType(type);
-    setIsPromptModalOpen(true);
+  const handleWorkflowClick = () => {
+    navigate(`/project/${id}/workflow`);
   };
 
   return (
@@ -110,14 +104,18 @@ const ProjectDetail = () => {
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Horizontal Tabs */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-4">
-            <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
-            <TabsTrigger value="scenarios" className="text-sm">Scenarios</TabsTrigger>
-            <TabsTrigger value="test-cases" className="text-sm">Test Cases</TabsTrigger>
-            <TabsTrigger value="test-data" className="text-sm">Test Data</TabsTrigger>
-            <TabsTrigger value="run-history" className="text-sm">Run History</TabsTrigger>
+          <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground mb-4 overflow-x-auto">
+            <TabsTrigger value="overview" className="text-sm px-4 py-2">Overview</TabsTrigger>
+            <TabsTrigger value="scenarios" className="text-sm px-4 py-2">Test Scenarios</TabsTrigger>
+            <TabsTrigger 
+              value="workflow" 
+              className="text-sm px-4 py-2"
+              onClick={handleWorkflowClick}
+            >
+              Workflow
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -222,27 +220,9 @@ const ProjectDetail = () => {
           </TabsContent>
 
           <TabsContent value="scenarios">
-            <TestScenariosTab onOpenPromptModal={() => openPromptModal('scenarios')} />
-          </TabsContent>
-
-          <TabsContent value="test-cases">
-            <TestCasesTab onOpenPromptModal={() => openPromptModal('cases')} />
-          </TabsContent>
-
-          <TabsContent value="test-data">
-            <TestDataTab onOpenPromptModal={() => openPromptModal('data')} />
-          </TabsContent>
-
-          <TabsContent value="run-history">
-            <RunHistoryTab onOpenPromptModal={() => openPromptModal('scenarios')} />
+            <TestScenariosTab />
           </TabsContent>
         </Tabs>
-
-        <PromptModal
-          isOpen={isPromptModalOpen}
-          onClose={() => setIsPromptModalOpen(false)}
-          type={promptType}
-        />
 
         <DocumentUploadModal
           isOpen={isDocumentUploadOpen}

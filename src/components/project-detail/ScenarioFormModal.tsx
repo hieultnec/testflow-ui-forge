@@ -27,7 +27,7 @@ const ScenarioFormModal: React.FC<ScenarioFormModalProps> = ({
   scenario, 
   mode 
 }) => {
-  const [selectedPriority, setSelectedPriority] = React.useState(scenario?.priority || 'Medium');
+  const [selectedPriority, setSelectedPriority] = React.useState<'High' | 'Medium' | 'Low'>(scenario?.priority || 'Medium');
   
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<ScenarioFormData>({
     defaultValues: scenario || { name: '', description: '', priority: 'Medium' }
@@ -45,7 +45,7 @@ const ScenarioFormModal: React.FC<ScenarioFormModalProps> = ({
   const onSubmit = (data: ScenarioFormData) => {
     const formData = {
       ...data,
-      priority: selectedPriority as 'High' | 'Medium' | 'Low'
+      priority: selectedPriority
     };
     console.log(`${mode} scenario:`, formData);
     // Here you would handle the actual create/update
@@ -58,6 +58,10 @@ const ScenarioFormModal: React.FC<ScenarioFormModalProps> = ({
     reset();
     setSelectedPriority('Medium');
     onClose();
+  };
+
+  const handlePriorityChange = (value: string) => {
+    setSelectedPriority(value as 'High' | 'Medium' | 'Low');
   };
 
   return (
@@ -105,7 +109,7 @@ const ScenarioFormModal: React.FC<ScenarioFormModalProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="priority" className="text-sm">Priority</Label>
-            <Select value={selectedPriority} onValueChange={setSelectedPriority}>
+            <Select value={selectedPriority} onValueChange={handlePriorityChange}>
               <SelectTrigger className="text-sm">
                 <SelectValue placeholder="Select priority" />
               </SelectTrigger>
