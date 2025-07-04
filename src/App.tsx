@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import CreateProject from "./pages/CreateProject";
 import WorkflowResult from "./pages/WorkflowResult";
 import VersionHistory from "./pages/VersionHistory";
+import ProjectDetail from "./pages/ProjectDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/create-project" element={<CreateProject />} />
+          <Route path="/project/:id" element={<ProjectDetail />} />
           <Route path="/project/:id/workflow" element={<WorkflowResult />} />
           <Route path="/project/:id/versions" element={<VersionHistory />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
