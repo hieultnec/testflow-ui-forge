@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ArrowLeft, Edit3, RefreshCw, Save, ChevronDown, ChevronRight, Eye, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -255,7 +254,7 @@ const WorkflowResult = () => {
                               <div key={testCase.id} className="bg-white border border-gray-200 rounded-lg p-4">
                                 <div className="flex items-center justify-between mb-2">
                                   <h5 className="font-medium text-gray-900">{testCase.title}</h5>
-                                  <Badge className={getPriorityColor(testCase.priority)} variant="secondary" size="sm">
+                                  <Badge className={getPriorityColor(testCase.priority)} variant="secondary">
                                     {testCase.priority}
                                   </Badge>
                                 </div>

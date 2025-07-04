@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Clock, User, GitBranch, Eye, RotateCcw, Download, Compare } from 'lucide-react';
+import { ArrowLeft, Clock, User, GitBranch, Eye, RotateCcw, Download, GitCompare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -150,7 +150,7 @@ const VersionHistory = () => {
                 onClick={handleViewDiff}
                 className="px-4 py-2"
               >
-                <Compare className="w-4 h-4 mr-2" />
+                <GitCompare className="w-4 h-4 mr-2" />
                 View Diff ({selectedVersions.length}/2)
               </Button>
               <Button variant="outline" className="px-4 py-2">
