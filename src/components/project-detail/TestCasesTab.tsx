@@ -11,11 +11,13 @@ import TestCaseFormModal from './TestCaseFormModal';
 
 interface TestCase {
   id: string;
-  name: string;
+  title: string;
+  description: string;
   scenarioId: string;
   scenarioName: string;
   expectedResult: string;
   steps: string[];
+  status: 'untested' | 'passed' | 'failed';
   tags: string[];
   version: string;
   lastUpdated: string;
@@ -28,7 +30,8 @@ interface TestCasesTabProps {
 const mockTestCases: TestCase[] = [
   {
     id: '1',
-    name: 'Register with valid email',
+    title: 'Register with valid email',
+    description: 'Test user registration with valid email format',
     scenarioId: '1',
     scenarioName: 'User Registration Flow',
     expectedResult: 'User successfully registered and verification email sent',
@@ -39,13 +42,15 @@ const mockTestCases: TestCase[] = [
       'Confirm password',
       'Click Register button'
     ],
+    status: 'passed',
     tags: ['Regression', 'Smoke'],
     version: 'v1.2',
     lastUpdated: '2024-01-15'
   },
   {
     id: '2',
-    name: 'Register with invalid email format',
+    title: 'Register with invalid email format',
+    description: 'Test validation for invalid email format during registration',
     scenarioId: '1',
     scenarioName: 'User Registration Flow',
     expectedResult: 'Error message displayed for invalid email format',
@@ -55,13 +60,15 @@ const mockTestCases: TestCase[] = [
       'Enter password',
       'Click Register button'
     ],
+    status: 'failed',
     tags: ['Negative', 'Validation'],
     version: 'v1.1',
     lastUpdated: '2024-01-14'
   },
   {
     id: '3',
-    name: 'Process credit card payment',
+    title: 'Process credit card payment',
+    description: 'Test successful credit card payment processing',
     scenarioId: '2',
     scenarioName: 'Payment Processing',
     expectedResult: 'Payment processed successfully and confirmation displayed',
@@ -72,6 +79,7 @@ const mockTestCases: TestCase[] = [
       'Click Pay Now button',
       'Verify payment confirmation'
     ],
+    status: 'untested',
     tags: ['Critical', 'Integration'],
     version: 'v1.0',
     lastUpdated: '2024-01-13'
@@ -105,8 +113,8 @@ const TestCasesTab: React.FC<TestCasesTabProps> = ({ onOpenPromptModal }) => {
     setIsFormModalOpen(true);
   };
 
-  const handleRunTestCase = (testCaseId: string, testCaseName: string) => {
-    console.log(`Running test case: ${testCaseName} (ID: ${testCaseId})`);
+  const handleRunTestCase = (testCaseId: string, testCaseTitle: string) => {
+    console.log(`Running test case: ${testCaseTitle} (ID: ${testCaseId})`);
     // Mock test case run - in real implementation, this would trigger test execution
   };
 
@@ -114,7 +122,7 @@ const TestCasesTab: React.FC<TestCasesTabProps> = ({ onOpenPromptModal }) => {
     const duplicated = {
       ...testCase,
       id: Date.now().toString(),
-      name: `${testCase.name} (Copy)`,
+      title: `${testCase.title} (Copy)`,
       lastUpdated: new Date().toISOString().split('T')[0]
     };
     setTestCases(prev => [...prev, duplicated]);
@@ -134,6 +142,15 @@ const TestCasesTab: React.FC<TestCasesTabProps> = ({ onOpenPromptModal }) => {
       'Integration': 'bg-indigo-50 text-indigo-700 border-indigo-200'
     };
     return colors[tag] || 'bg-gray-50 text-gray-700 border-gray-200';
+  };
+
+  const getStatusColor = (status: 'untested' | 'passed' | 'failed') => {
+    const colors = {
+      'untested': 'bg-gray-50 text-gray-700 border-gray-200',
+      'passed': 'bg-green-50 text-green-700 border-green-200',
+      'failed': 'bg-red-50 text-red-700 border-red-200'
+    };
+    return colors[status];
   };
 
   return (
@@ -172,7 +189,10 @@ const TestCasesTab: React.FC<TestCasesTabProps> = ({ onOpenPromptModal }) => {
                       )}
                       <div className="text-left">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium text-gray-900 text-sm">{testCase.name}</h4>
+                          <h4 className="font-medium text-gray-900 text-sm">{testCase.title}</h4>
+                          <Badge className={`${getStatusColor(testCase.status)} text-xs px-2 py-0`} variant="outline">
+                            {testCase.status}
+                          </Badge>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
@@ -181,7 +201,7 @@ const TestCasesTab: React.FC<TestCasesTabProps> = ({ onOpenPromptModal }) => {
                                 className="p-1 h-6 w-6"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleRunTestCase(testCase.id, testCase.name);
+                                  handleRunTestCase(testCase.id, testCase.title);
                                 }}
                               >
                                 <Play className="w-3 h-3" />
@@ -212,6 +232,10 @@ const TestCasesTab: React.FC<TestCasesTabProps> = ({ onOpenPromptModal }) => {
                 <CollapsibleContent>
                   <div className="mt-2 ml-6 p-3 bg-white border border-gray-200 rounded-md">
                     <div className="space-y-3">
+                      <div>
+                        <h6 className="font-medium text-gray-900 mb-2 text-sm">Description:</h6>
+                        <p className="text-xs text-gray-700 mb-3">{testCase.description}</p>
+                      </div>
                       <div>
                         <h6 className="font-medium text-gray-900 mb-2 text-sm">Steps:</h6>
                         <ol className="space-y-1">
@@ -255,7 +279,7 @@ const TestCasesTab: React.FC<TestCasesTabProps> = ({ onOpenPromptModal }) => {
                             <AlertDialogHeader>
                               <AlertDialogTitle className="text-lg">Delete Test Case</AlertDialogTitle>
                               <AlertDialogDescription className="text-sm">
-                                Are you sure you want to delete "{testCase.name}"? This action cannot be undone.
+                                Are you sure you want to delete "{testCase.title}"? This action cannot be undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
