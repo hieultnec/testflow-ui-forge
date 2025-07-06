@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Settings, Download, Plus, Upload, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,6 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import TestScenariosTab from '@/components/project-detail/TestScenariosTab';
 import DocumentUploadModal from '@/components/project-detail/DocumentUploadModal';
 import ScenarioFormModal from '@/components/project-detail/ScenarioFormModal';
+import { useAppDispatch } from '@/hooks/useAppDispatch';
+import { useAppSelector } from '@/hooks/useAppSelector';
+import { fetchProject } from '@/store/slices/projectSlice';
+import { fetchScenarios } from '@/store/slices/scenarioSlice';
 
 interface Document {
   id: string;
@@ -24,17 +27,19 @@ interface Document {
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { currentProject, loading: projectLoading, error: projectError } = useAppSelector(state => state.projects);
+  const { scenarios, loading: scenariosLoading } = useAppSelector(state => state.scenarios);
+  
   const [isDocumentUploadOpen, setIsDocumentUploadOpen] = useState(false);
   const [isScenarioFormOpen, setIsScenarioFormOpen] = useState(false);
 
-  const mockProject = {
-    id: id || '1',
-    name: 'E-commerce Platform Testing',
-    description: 'Comprehensive test suite for the e-commerce platform including user authentication, product catalog, and payment processing.',
-    version: 'v2.1.0',
-    owner: 'Sarah Chen',
-    lastUpdated: '2024-01-15 14:30:22'
-  };
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchProject(id));
+      dispatch(fetchScenarios(id));
+    }
+  }, [dispatch, id]);
 
   const mockDocuments: Document[] = [
     {
@@ -70,6 +75,47 @@ const ProjectDetail = () => {
     navigate(`/project/${id}/workflow`);
   };
 
+  if (projectLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading project...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (projectError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error loading project: {projectError}</p>
+          <Link to="/" className="text-blue-600 hover:text-blue-700">
+            Back to Projects
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentProject) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">Project not found</p>
+          <Link to="/" className="text-blue-600 hover:text-blue-700">
+            Back to Projects
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const totalTestCases = scenarios.reduce((total, scenario) => 
+    total + (scenario.test_cases?.length || 0), 0
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <div className="container mx-auto px-4 py-6">
@@ -82,12 +128,12 @@ const ProjectDetail = () => {
           
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">{mockProject.name}</h1>
-              <p className="text-gray-600 mb-1 text-sm">{mockProject.description}</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">{currentProject.name}</h1>
+              <p className="text-gray-600 mb-1 text-sm">{currentProject.description}</p>
               <div className="flex items-center gap-3 text-xs text-gray-500">
-                <span>Version: {mockProject.version}</span>
-                <span>Owner: {mockProject.owner}</span>
-                <span>Updated: {mockProject.lastUpdated}</span>
+                <span>Version: {currentProject.version}</span>
+                <span>Owner: {currentProject.owner}</span>
+                <span>Updated: {new Date(currentProject.lastUpdated).toLocaleString()}</span>
               </div>
             </div>
             
@@ -131,11 +177,11 @@ const ProjectDetail = () => {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <div className="bg-blue-50 p-3 rounded-md border border-gray-100">
                       <h3 className="font-medium text-blue-900 text-sm">Test Scenarios</h3>
-                      <p className="text-xl font-bold text-blue-700">12</p>
+                      <p className="text-xl font-bold text-blue-700">{scenarios.length}</p>
                     </div>
                     <div className="bg-green-50 p-3 rounded-md border border-gray-100">
                       <h3 className="font-medium text-green-900 text-sm">Test Cases</h3>
-                      <p className="text-xl font-bold text-green-700">47</p>
+                      <p className="text-xl font-bold text-green-700">{totalTestCases}</p>
                     </div>
                     <div className="bg-purple-50 p-3 rounded-md border border-gray-100">
                       <h3 className="font-medium text-purple-900 text-sm">Test Data Sets</h3>
