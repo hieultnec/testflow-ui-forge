@@ -17,7 +17,7 @@ interface ScenarioFormData {
 interface ScenarioFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  scenario?: ScenarioFormData & { id: string };
+  scenario?: ScenarioFormData & { id: string; version: string };
   mode: 'create' | 'edit';
 }
 
@@ -45,10 +45,12 @@ const ScenarioFormModal: React.FC<ScenarioFormModalProps> = ({
   const onSubmit = (data: ScenarioFormData) => {
     const formData = {
       ...data,
-      priority: selectedPriority
+      priority: selectedPriority,
+      project_id: 'current-project-id', // This should come from context/props
+      version: mode === 'edit' ? scenario?.version : 'v1.0'
     };
     console.log(`${mode} scenario:`, formData);
-    // Here you would handle the actual create/update
+    // Here you would call the API: POST /api/scenario/create or PUT /api/scenario/update
     reset();
     setSelectedPriority('Medium');
     onClose();

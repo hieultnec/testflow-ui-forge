@@ -10,24 +10,25 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import ScenarioFormModal from './ScenarioFormModal';
 import TestCaseFormModal from './TestCaseFormModal';
 
-interface TestCase {
+interface TestRun {
   id: string;
-  name: string;
-  expectedResult: string;
-  steps: string[];
-  tags: string[];
+  executedBy: string;
+  executedAt: string;
+  status: 'pass' | 'fail' | 'skipped';
+  logs: string;
   version: string;
-  lastUpdated: string;
-  testDataSets: TestDataSet[];
 }
 
-interface TestDataSet {
+interface TestCase {
   id: string;
-  name: string;
-  inputData: Record<string, any>;
-  expectedOutput: Record<string, any>;
+  title: string;
+  description: string;
+  steps: string[];
+  expectedResult: string;
+  status: 'untested' | 'passed' | 'failed';
   version: string;
   lastUpdated: string;
+  testRuns: TestRun[];
 }
 
 interface TestScenario {
@@ -51,7 +52,8 @@ const mockScenarios: TestScenario[] = [
     testCases: [
       {
         id: '1',
-        name: 'Register with valid email',
+        title: 'Register with valid email',
+        description: 'Test user registration with valid email format',
         expectedResult: 'User successfully registered and verification email sent',
         steps: [
           'Navigate to registration page',
@@ -60,23 +62,24 @@ const mockScenarios: TestScenario[] = [
           'Confirm password',
           'Click Register button'
         ],
-        tags: ['Regression', 'Smoke'],
+        status: 'passed',
         version: 'v1.2',
         lastUpdated: '2024-01-15',
-        testDataSets: [
+        testRuns: [
           {
             id: '1',
-            name: 'Valid User Data',
-            inputData: { email: 'test@example.com', password: 'SecurePass123!' },
-            expectedOutput: { status: 'success', message: 'Registration successful' },
-            version: 'v1.0',
-            lastUpdated: '2024-01-15'
+            executedBy: 'tester@example.com',
+            executedAt: '2024-01-15 10:30:00',
+            status: 'pass',
+            logs: 'Test executed successfully',
+            version: 'v1.2'
           }
         ]
       },
       {
         id: '2',
-        name: 'Register with invalid email',
+        title: 'Register with invalid email',
+        description: 'Test user registration with invalid email format',
         expectedResult: 'Error message displayed for invalid email format',
         steps: [
           'Navigate to registration page',
@@ -84,17 +87,17 @@ const mockScenarios: TestScenario[] = [
           'Enter password',
           'Click Register button'
         ],
-        tags: ['Negative', 'Validation'],
+        status: 'failed',
         version: 'v1.1',
         lastUpdated: '2024-01-14',
-        testDataSets: [
+        testRuns: [
           {
             id: '2',
-            name: 'Invalid Email Data',
-            inputData: { email: 'invalid@', password: 'SecurePass123!' },
-            expectedOutput: { status: 'error', message: 'Invalid email format' },
-            version: 'v1.0',
-            lastUpdated: '2024-01-14'
+            executedBy: 'tester@example.com',
+            executedAt: '2024-01-14 16:20:00',
+            status: 'fail',
+            logs: 'Expected error message not displayed',
+            version: 'v1.1'
           }
         ]
       }
@@ -110,7 +113,8 @@ const mockScenarios: TestScenario[] = [
     testCases: [
       {
         id: '3',
-        name: 'Process credit card payment',
+        title: 'Process credit card payment',
+        description: 'Test successful credit card payment processing',
         expectedResult: 'Payment processed successfully and confirmation displayed',
         steps: [
           'Add items to cart',
@@ -119,19 +123,10 @@ const mockScenarios: TestScenario[] = [
           'Click Pay Now button',
           'Verify payment confirmation'
         ],
-        tags: ['Critical', 'Integration'],
+        status: 'untested',
         version: 'v1.0',
         lastUpdated: '2024-01-13',
-        testDataSets: [
-          {
-            id: '3',
-            name: 'Valid Credit Card',
-            inputData: { cardNumber: '4111111111111111', cvv: '123', expiry: '12/25' },
-            expectedOutput: { status: 'success', transactionId: 'TXN123' },
-            version: 'v1.0',
-            lastUpdated: '2024-01-13'
-          }
-        ]
+        testRuns: []
       }
     ]
   }
@@ -141,6 +136,7 @@ const TestScenariosTab: React.FC = () => {
   const [scenarios, setScenarios] = useState<TestScenario[]>(mockScenarios);
   const [expandedScenarios, setExpandedScenarios] = useState<string[]>([]);
   const [expandedTestCases, setExpandedTestCases] = useState<string[]>([]);
+  const [expandedTestRuns, setExpandedTestRuns] = useState<string[]>([]);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isTestCaseModalOpen, setIsTestCaseModalOpen] = useState(false);
   const [editingScenario, setEditingScenario] = useState<TestScenario | undefined>();
@@ -157,6 +153,14 @@ const TestScenariosTab: React.FC = () => {
 
   const toggleTestCase = (testCaseId: string) => {
     setExpandedTestCases(prev =>
+      prev.includes(testCaseId)
+        ? prev.filter(id => id !== testCaseId)
+        : [...prev, testCaseId]
+    );
+  };
+
+  const toggleTestRuns = (testCaseId: string) => {
+    setExpandedTestRuns(prev =>
       prev.includes(testCaseId)
         ? prev.filter(id => id !== testCaseId)
         : [...prev, testCaseId]
@@ -201,16 +205,22 @@ const TestScenariosTab: React.FC = () => {
     }
   };
 
-  const getTagColor = (tag: string) => {
-    const colors: { [key: string]: string } = {
-      'Regression': 'bg-blue-50 text-blue-700 border-blue-200',
-      'Smoke': 'bg-green-50 text-green-700 border-green-200',
-      'Critical': 'bg-red-50 text-red-700 border-red-200',
-      'Negative': 'bg-orange-50 text-orange-700 border-orange-200',
-      'Validation': 'bg-purple-50 text-purple-700 border-purple-200',
-      'Integration': 'bg-indigo-50 text-indigo-700 border-indigo-200'
-    };
-    return colors[tag] || 'bg-gray-50 text-gray-700 border-gray-200';
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'passed': return 'bg-green-50 text-green-700 border-green-200';
+      case 'failed': return 'bg-red-50 text-red-700 border-red-200';
+      case 'untested': return 'bg-gray-50 text-gray-700 border-gray-200';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
+
+  const getRunStatusColor = (status: string) => {
+    switch (status) {
+      case 'pass': return 'bg-green-50 text-green-700 border-green-200';
+      case 'fail': return 'bg-red-50 text-red-700 border-red-200';
+      case 'skipped': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
   };
 
   return (
@@ -351,7 +361,7 @@ const TestScenariosTab: React.FC = () => {
                                 )}
                                 <div className="text-left">
                                   <div className="flex items-center gap-2 mb-1">
-                                    <h5 className="font-medium text-blue-900 text-sm">{testCase.name}</h5>
+                                    <h5 className="font-medium text-blue-900 text-sm">{testCase.title}</h5>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <Button
@@ -360,7 +370,7 @@ const TestScenariosTab: React.FC = () => {
                                           className="p-1 h-6 w-6"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            handleRunTestCase(testCase.id, testCase.name);
+                                            handleRunTestCase(testCase.id, testCase.title);
                                           }}
                                         >
                                           <Play className="w-3 h-3" />
@@ -371,19 +381,15 @@ const TestScenariosTab: React.FC = () => {
                                       </TooltipContent>
                                     </Tooltip>
                                   </div>
-                                  <div className="flex items-center gap-1 mb-2 flex-wrap">
-                                    {testCase.tags.map((tag) => (
-                                      <Badge key={tag} className={`${getTagColor(tag)} text-xs px-2 py-0`} variant="outline">
-                                        {tag}
-                                      </Badge>
-                                    ))}
-                                  </div>
+                                  <p className="text-xs text-blue-600 mb-2">{testCase.description}</p>
                                   <div className="flex items-center gap-2">
+                                    <Badge className={`${getStatusColor(testCase.status)} text-xs px-2 py-0`} variant="outline">
+                                      {testCase.status}
+                                    </Badge>
+                                    <span className="text-xs text-blue-400">•</span>
                                     <span className="text-xs text-blue-600">Version: {testCase.version}</span>
                                     <span className="text-xs text-blue-400">•</span>
-                                    <span className="text-xs text-blue-600">Updated: {testCase.lastUpdated}</span>
-                                    <span className="text-xs text-blue-400">•</span>
-                                    <span className="text-xs text-blue-600">{testCase.testDataSets.length} data sets</span>
+                                    <span className="text-xs text-blue-600">{testCase.testRuns.length} runs</span>
                                   </div>
                                 </div>
                               </div>
@@ -409,43 +415,47 @@ const TestScenariosTab: React.FC = () => {
                                   <p className="text-xs text-gray-700">{testCase.expectedResult}</p>
                                 </div>
                                 
-                                {/* Test Data Sets */}
+                                {/* Test Runs */}
                                 <div>
-                                  <h6 className="font-medium text-gray-900 mb-2 text-sm">Test Data Sets ({testCase.testDataSets.length})</h6>
-                                  <div className="space-y-2">
-                                    {testCase.testDataSets.map((dataSet) => (
-                                      <div key={dataSet.id} className="p-2 bg-gray-50 rounded border">
-                                        <div className="flex items-center justify-between mb-2">
-                                          <h7 className="font-medium text-gray-800 text-xs">{dataSet.name}</h7>
-                                          <span className="text-xs text-gray-500">{dataSet.version}</span>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-2 text-xs">
-                                          <div>
-                                            <span className="font-medium text-gray-700">Input:</span>
-                                            <pre className="text-gray-600 bg-white p-1 rounded text-xs overflow-x-auto">
-                                              {JSON.stringify(dataSet.inputData, null, 2)}
-                                            </pre>
-                                          </div>
-                                          <div>
-                                            <span className="font-medium text-gray-700">Expected Output:</span>
-                                            <pre className="text-gray-600 bg-white p-1 rounded text-xs overflow-x-auto">
-                                              {JSON.stringify(dataSet.expectedOutput, null, 2)}
-                                            </pre>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
+                                  <div className="flex items-center justify-between mb-2">
+                                    <h6 className="font-medium text-gray-900 text-sm">Test Runs ({testCase.testRuns.length})</h6>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => toggleTestRuns(testCase.id)}
+                                      className="px-2 py-1"
+                                    >
+                                      {expandedTestRuns.includes(testCase.id) ? (
+                                        <ChevronDown className="w-4 h-4" />
+                                      ) : (
+                                        <ChevronRight className="w-4 h-4" />
+                                      )}
+                                    </Button>
                                   </div>
+                                  {expandedTestRuns.includes(testCase.id) && (
+                                    <div className="space-y-2">
+                                      {testCase.testRuns.map((testRun) => (
+                                        <div key={testRun.id} className="p-2 bg-gray-50 rounded border">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                              <Badge className={`${getRunStatusColor(testRun.status)} text-xs px-2 py-0`} variant="outline">
+                                                {testRun.status}
+                                              </Badge>
+                                              <span className="text-xs text-gray-600">{testRun.executedBy}</span>
+                                            </div>
+                                            <span className="text-xs text-gray-500">{testRun.executedAt}</span>
+                                          </div>
+                                          <p className="text-xs text-gray-600">{testRun.logs}</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                                 
                                 <div className="flex gap-2 pt-2 border-t border-gray-100 flex-wrap">
                                   <Button variant="outline" size="sm" className="px-3 py-1">
                                     <Edit3 className="w-4 h-4 mr-1" />
                                     Edit Test Case
-                                  </Button>
-                                  <Button variant="outline" size="sm" className="px-3 py-1">
-                                    <Plus className="w-4 h-4 mr-1" />
-                                    Add Test Data
                                   </Button>
                                   <Button variant="outline" size="sm" className="px-3 py-1">
                                     <History className="w-4 h-4 mr-1" />

@@ -5,23 +5,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 
 interface TestCaseFormData {
-  name: string;
+  title: string;
+  description: string;
   scenarioId: string;
   expectedResult: string;
   steps: string[];
-  tags: string[];
+  status: 'untested' | 'passed' | 'failed';
 }
 
 interface TestCaseFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  testCase?: TestCaseFormData & { id: string };
+  testCase?: TestCaseFormData & { id: string; version: string };
   mode: 'create' | 'edit';
   prefilledScenarioId?: string;
 }
@@ -34,12 +34,11 @@ const TestCaseFormModal: React.FC<TestCaseFormModalProps> = ({
   prefilledScenarioId 
 }) => {
   const [steps, setSteps] = useState<string[]>(testCase?.steps || ['']);
-  const [tags, setTags] = useState<string[]>(testCase?.tags || []);
-  const [newTag, setNewTag] = useState('');
   const [selectedScenario, setSelectedScenario] = useState(prefilledScenarioId || testCase?.scenarioId || '');
+  const [selectedStatus, setSelectedStatus] = useState<'untested' | 'passed' | 'failed'>(testCase?.status || 'untested');
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<TestCaseFormData>({
-    defaultValues: testCase || { name: '', scenarioId: prefilledScenarioId || '', expectedResult: '', steps: [''], tags: [] }
+    defaultValues: testCase || { title: '', description: '', scenarioId: prefilledScenarioId || '', expectedResult: '', steps: [''], status: 'untested' }
   });
 
   React.useEffect(() => {
@@ -63,38 +62,29 @@ const TestCaseFormModal: React.FC<TestCaseFormModalProps> = ({
     setSteps(steps.filter((_, i) => i !== index));
   };
 
-  const addTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags([...tags, newTag.trim()]);
-      setNewTag('');
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-  };
-
   const onSubmit = (data: TestCaseFormData) => {
     const formData = {
       ...data,
       scenarioId: selectedScenario,
+      status: selectedStatus,
       steps: steps.filter(step => step.trim() !== ''),
-      tags
+      project_id: 'current-project-id', // This should come from context/props
+      version: mode === 'edit' ? testCase?.version : 'v1.0'
     };
     console.log(`${mode} test case:`, formData);
-    // Here you would handle the actual create/update
+    // Here you would call the API: POST /api/test_case/create or PUT /api/test_case/update
     reset();
     setSteps(['']);
-    setTags([]);
     setSelectedScenario('');
+    setSelectedStatus('untested');
     onClose();
   };
 
   const handleClose = () => {
     reset();
     setSteps(['']);
-    setTags([]);
     setSelectedScenario('');
+    setSelectedStatus('untested');
     onClose();
   };
 
@@ -107,7 +97,7 @@ const TestCaseFormModal: React.FC<TestCaseFormModalProps> = ({
           </DialogTitle>
           <DialogDescription className="text-sm">
             {mode === 'create' 
-              ? 'Define a new test case with steps, expected results, and tags.'
+              ? 'Define a new test case with steps, expected results, and status.'
               : 'Update the test case details.'
             }
           </DialogDescription>
@@ -115,15 +105,29 @@ const TestCaseFormModal: React.FC<TestCaseFormModalProps> = ({
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-sm">Test Case Name</Label>
+            <Label htmlFor="title" className="text-sm">Test Case Title</Label>
             <Input
-              id="name"
+              id="title"
               placeholder="e.g., Register with valid email"
               className="text-sm"
-              {...register('name', { required: 'Test case name is required' })}
+              {...register('title', { required: 'Test case title is required' })}
             />
-            {errors.name && (
-              <p className="text-xs text-red-600">{errors.name.message}</p>
+            {errors.title && (
+              <p className="text-xs text-red-600">{errors.title.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-sm">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="Describe what this test case validates..."
+              rows={3}
+              className="text-sm resize-none"
+              {...register('description', { required: 'Description is required' })}
+            />
+            {errors.description && (
+              <p className="text-xs text-red-600">{errors.description.message}</p>
             )}
           </div>
 
@@ -185,33 +189,17 @@ const TestCaseFormModal: React.FC<TestCaseFormModalProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-sm">Tags</Label>
-            <div className="flex flex-wrap gap-1 mb-2">
-              {tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="flex items-center gap-1 text-xs px-2 py-0">
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="ml-1 hover:text-red-600"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add a tag (e.g., Regression, Smoke)"
-                value={newTag}
-                className="text-sm"
-                onChange={(e) => setNewTag(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-              />
-              <Button type="button" variant="outline" onClick={addTag} className="px-3 py-1">
-                Add
-              </Button>
-            </div>
+            <Label htmlFor="status" className="text-sm">Status</Label>
+            <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as 'untested' | 'passed' | 'failed')}>
+              <SelectTrigger className="text-sm">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="untested">Untested</SelectItem>
+                <SelectItem value="passed">Passed</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <DialogFooter className="pt-4">
